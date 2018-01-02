@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from collections import Counter
 from itertools import chain
 import os
@@ -75,6 +78,7 @@ class DataManager(object):
             self.get_image_features(self.image_directory)
             self.move_to_path()
             self.write_image_features_to_h5()
+            self.move_path_back()
         self.move_to_path()
         self.write_data()
         self.write_dictionaries()
@@ -102,6 +106,9 @@ class DataManager(object):
         reduced_captions = []
         previous_file_size = len(self.captions)
         for image_arg, caption in enumerate(self.captions):
+            # print(image_arg)
+            # print(self.image_files[image_arg])
+            # print(caption)
             lemmatized_caption = self.lemmatize_sentence(caption)
             if (len(lemmatized_caption) <= self.max_caption_length):
                 reduced_captions.append(lemmatized_caption)
@@ -119,6 +126,7 @@ class DataManager(object):
         self.current_number_of_captions = current_file_size
 
     def lemmatize_sentence(self, caption):
+        # print(caption)
         incorrect_chars = digits + ";.,'/*?¿><:{}[\]|+"
         char_translator = str.maketrans('', '', incorrect_chars)
         quotes_translator = str.maketrans('', '', '"')
@@ -227,9 +235,14 @@ class DataManager(object):
             from keras.applications import InceptionV3
 
             self.IMG_FEATS = 2048
+            # self.IMG_FEATS = 1024
             base_model = InceptionV3(weights='imagenet')
+            # for layer in base_model.layers:
+            #     print(layer.name)
+            # print(base_model.layers)
+            print(base_model.get_layer('avg_pool').output_shape)
             model =  Model(input=base_model.input,
-                                output=base_model.get_layer('flatten').output)
+                                output=base_model.get_layer('avg_pool').output)
             self.extracted_features = []
             self.image_feature_files = list(set(self.image_files))
             number_of_images = len(self.image_feature_files)
